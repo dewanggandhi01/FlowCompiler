@@ -56,8 +56,12 @@ class BaseAgent(ABC):
 
     def __init__(self) -> None:
         self.settings = get_settings()
-        self.client = OpenAI(api_key=self.settings.openai_api_key)
-        self.async_client = AsyncOpenAI(api_key=self.settings.openai_api_key)
+        # Support AI Pipe or any OpenAI-compatible proxy via custom base_url
+        client_kwargs: dict = {"api_key": self.settings.openai_api_key}
+        if self.settings.openai_base_url:
+            client_kwargs["base_url"] = self.settings.openai_base_url
+        self.client = OpenAI(**client_kwargs)
+        self.async_client = AsyncOpenAI(**client_kwargs)
         self.model = self.settings.openai_model
         self.temperature = self.settings.openai_temperature
         self.max_retries = self.settings.max_retries

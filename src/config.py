@@ -30,8 +30,12 @@ class Settings(BaseSettings):
     app_port: int = 8000
     frontend_url: str = "http://localhost:3000"
 
-    # ── OpenAI ───────────────────────────────────────────
-    openai_api_key: str = Field(default="", description="OpenAI API key")
+    # ── OpenAI / AI Pipe ──────────────────────────────────
+    openai_api_key: str = Field(default="", description="OpenAI API key or AI Pipe token")
+    openai_base_url: str = Field(
+        default="",
+        description="Custom base URL for OpenAI-compatible API (e.g. https://aipipe.org/openai/v1)",
+    )
     openai_model: str = Field(default="gpt-4o", description="OpenAI model name")
     openai_temperature: float = Field(
         default=0.0,
