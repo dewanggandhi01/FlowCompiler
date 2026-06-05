@@ -1,29 +1,19 @@
 # Core
-fastapi==0.115.6
-uvicorn[standard]==0.34.0
-pydantic==2.10.4
-pydantic-settings==2.7.1
-python-dotenv==1.0.1
+fastapi>=0.115.0
+uvicorn[standard]>=0.34.0
+pydantic>=2.10.0
+pydantic-settings>=2.7.0
+python-dotenv>=1.0.0
 
 # AI
-openai==1.59.5
-langchain==0.3.14
-langchain-openai==0.3.1
-langchain-core==0.3.29
-langgraph==0.2.62
-
-# Database
-psycopg2-binary==2.9.10
-sqlalchemy==2.0.36
-supabase==2.11.0
+openai>=1.59.0
+langchain>=0.3.14
+langchain-openai>=0.3.1
+langchain-core>=0.3.30
+langgraph>=0.2.60
 
 # HTTP
-httpx==0.28.1
-
-# Testing
-pytest==8.3.4
-pytest-asyncio==0.25.0
-pytest-cov==6.0.0
+httpx>=0.28.0
 
 # Utilities
-rich==13.9.4
+rich>=13.9.0
