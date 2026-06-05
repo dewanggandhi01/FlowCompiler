@@ -1,0 +1,114 @@
+{
+  "compile_id": "compile_a1b2c3d4e5f6",
+  "original_prompt": "Build a CRM with login, contacts, dashboard, role-based access, payments, and admin analytics.",
+  "status": "completed",
+  "intent": {
+    "app_name": "SmartCRM",
+    "domain": "crm",
+    "description": "A comprehensive CRM with user authentication, contact management, dashboard analytics, RBAC, payment processing, and admin analytics.",
+    "entities": [
+      { "name": "User", "description": "Application user", "fields": [
+        {"name": "id", "field_type": "uuid", "required": true, "unique": true},
+        {"name": "email", "field_type": "email", "required": true, "unique": true},
+        {"name": "password_hash", "field_type": "password", "required": true},
+        {"name": "full_name", "field_type": "string", "required": true},
+        {"name": "role", "field_type": "enum", "required": true, "enum_values": ["admin", "manager", "sales_rep"]}
+      ], "is_user_entity": true },
+      { "name": "Contact", "description": "CRM contact record", "fields": [
+        {"name": "id", "field_type": "uuid", "required": true, "unique": true},
+        {"name": "first_name", "field_type": "string", "required": true},
+        {"name": "last_name", "field_type": "string", "required": true},
+        {"name": "email", "field_type": "email", "required": false},
+        {"name": "phone", "field_type": "phone", "required": false},
+        {"name": "company_id", "field_type": "uuid", "required": false},
+        {"name": "status", "field_type": "enum", "required": true, "enum_values": ["lead", "prospect", "customer", "churned"]}
+      ] },
+      { "name": "Company", "description": "Company associated with contacts", "fields": [
+        {"name": "id", "field_type": "uuid", "required": true, "unique": true},
+        {"name": "name", "field_type": "string", "required": true},
+        {"name": "industry", "field_type": "string", "required": false},
+        {"name": "website", "field_type": "url", "required": false}
+      ] },
+      { "name": "Deal", "description": "Sales deal in pipeline", "fields": [
+        {"name": "id", "field_type": "uuid", "required": true, "unique": true},
+        {"name": "title", "field_type": "string", "required": true},
+        {"name": "value", "field_type": "money", "required": true},
+        {"name": "stage", "field_type": "enum", "required": true, "enum_values": ["new", "qualified", "proposal", "negotiation", "won", "lost"]},
+        {"name": "contact_id", "field_type": "uuid", "required": true}
+      ] },
+      { "name": "Payment", "description": "Payment transaction", "fields": [
+        {"name": "id", "field_type": "uuid", "required": true, "unique": true},
+        {"name": "amount", "field_type": "money", "required": true},
+        {"name": "status", "field_type": "enum", "required": true, "enum_values": ["pending", "completed", "failed", "refunded"]},
+        {"name": "deal_id", "field_type": "uuid", "required": true}
+      ] }
+    ],
+    "roles": [
+      {"name": "admin", "description": "Full system access", "permissions": ["*"]},
+      {"name": "manager", "description": "Team management", "permissions": ["contacts:*", "deals:*", "analytics:read"]},
+      {"name": "sales_rep", "description": "Sales operations", "is_default": true, "permissions": ["contacts:read", "contacts:create", "contacts:update", "deals:read", "deals:create"]}
+    ],
+    "pages": [
+      {"name": "Login", "route": "/login", "requires_auth": false},
+      {"name": "Dashboard", "route": "/dashboard", "requires_auth": true, "allowed_roles": ["admin", "manager", "sales_rep"]},
+      {"name": "Contacts", "route": "/contacts", "requires_auth": true, "allowed_roles": ["admin", "manager", "sales_rep"]},
+      {"name": "Deals", "route": "/deals", "requires_auth": true, "allowed_roles": ["admin", "manager", "sales_rep"]},
+      {"name": "Analytics", "route": "/analytics", "requires_auth": true, "allowed_roles": ["admin", "manager"]},
+      {"name": "Admin Settings", "route": "/admin", "requires_auth": true, "allowed_roles": ["admin"]}
+    ],
+    "integrations": [
+      {"name": "Stripe", "type": "payment", "description": "Payment processing"},
+      {"name": "SendGrid", "type": "email", "description": "Email notifications"}
+    ],
+    "payment": {
+      "has_payments": true,
+      "payment_provider": "stripe",
+      "has_subscriptions": true,
+      "plan_names": ["free", "basic", "premium"]
+    },
+    "analytics": {
+      "has_analytics": true,
+      "dashboard_metrics": ["total_contacts", "deals_won", "revenue", "conversion_rate"],
+      "has_admin_analytics": true
+    }
+  },
+  "validation_result": {
+    "status": "PASS",
+    "errors": [],
+    "warnings": [],
+    "total_checks": 87,
+    "passed_checks": 87,
+    "failed_checks": 0
+  },
+  "simulation_result": {
+    "runtime_status": "PASS",
+    "issues": [],
+    "simulated_checks": 45,
+    "passed_checks": 45,
+    "failed_checks": 0
+  },
+  "repair_reports": [],
+  "repair_iterations": 0,
+  "assumptions": [
+    {
+      "category": "Authentication",
+      "description": "JWT-based authentication with refresh tokens",
+      "reasoning": "Standard modern auth pattern for SPAs"
+    },
+    {
+      "category": "Database",
+      "description": "UUID primary keys with auto-generation",
+      "reasoning": "Better for distributed systems and security"
+    }
+  ],
+  "stages": [
+    {"stage": "intent_extraction", "status": "completed", "duration_ms": 3200},
+    {"stage": "system_design", "status": "completed", "duration_ms": 4100},
+    {"stage": "schema_generation", "status": "completed", "duration_ms": 8500},
+    {"stage": "validation", "status": "completed", "duration_ms": 12},
+    {"stage": "execution_simulation", "status": "completed", "duration_ms": 8}
+  ],
+  "total_duration_ms": 15820,
+  "total_tokens": 18450,
+  "estimated_cost_usd": 0.1153
+}
