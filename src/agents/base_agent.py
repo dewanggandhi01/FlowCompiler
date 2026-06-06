@@ -99,19 +99,7 @@ class BaseAgent(ABC):
 
         for attempt in range(self.max_retries):
             try:
-                response = self.client.beta.chat.completions.parse(
-                    model=self.model,
-                    temperature=self.temperature,
-                    messages=[
-                        {"role": "system", "content": self.system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                    response_format=self.output_model,
-                )
-
-                parsed = response.choices[0].message.parsed
-                usage = response.usage
-
+                parsed, usage = self._call_llm(user_prompt)
                 duration_ms = (time.time() - start_time) * 1000
                 token_usage = TokenUsage(
                     prompt_tokens=usage.prompt_tokens if usage else 0,
@@ -161,19 +149,7 @@ class BaseAgent(ABC):
 
         for attempt in range(self.max_retries):
             try:
-                response = await self.async_client.beta.chat.completions.parse(
-                    model=self.model,
-                    temperature=self.temperature,
-                    messages=[
-                        {"role": "system", "content": self.system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                    response_format=self.output_model,
-                )
-
-                parsed = response.choices[0].message.parsed
-                usage = response.usage
-
+                parsed, usage = await self._acall_llm(user_prompt)
                 duration_ms = (time.time() - start_time) * 1000
                 token_usage = TokenUsage(
                     prompt_tokens=usage.prompt_tokens if usage else 0,
@@ -206,6 +182,61 @@ class BaseAgent(ABC):
         raise RuntimeError(
             f"{self.__class__.__name__} failed after {self.max_retries} attempts: {last_error}"
         )
+
+    def _llm_messages(self, user_prompt: str) -> list[dict[str, str]]:
+        return [
+            {"role": "system", "content": self.system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+
+    def _parse_response(self, content: str) -> BaseModel:
+        return self.output_model.model_validate_json(content)
+
+    def _call_llm(self, user_prompt: str):
+        messages = self._llm_messages(user_prompt)
+        try:
+            response = self.client.beta.chat.completions.parse(
+                model=self.model,
+                temperature=self.temperature,
+                messages=messages,
+                response_format=self.output_model,
+            )
+            return response.choices[0].message.parsed, response.usage
+        except Exception as parse_error:
+            if "Invalid schema" not in str(parse_error) and "response_format" not in str(parse_error):
+                raise
+            logger.warning(f"{self.__class__.__name__} structured parse failed, using JSON mode")
+            response = self.client.chat.completions.create(
+                model=self.model,
+                temperature=self.temperature,
+                messages=messages,
+                response_format={"type": "json_object"},
+            )
+            content = response.choices[0].message.content or "{}"
+            return self._parse_response(content), response.usage
+
+    async def _acall_llm(self, user_prompt: str):
+        messages = self._llm_messages(user_prompt)
+        try:
+            response = await self.async_client.beta.chat.completions.parse(
+                model=self.model,
+                temperature=self.temperature,
+                messages=messages,
+                response_format=self.output_model,
+            )
+            return response.choices[0].message.parsed, response.usage
+        except Exception as parse_error:
+            if "Invalid schema" not in str(parse_error) and "response_format" not in str(parse_error):
+                raise
+            logger.warning(f"{self.__class__.__name__} structured parse failed, using JSON mode")
+            response = await self.async_client.chat.completions.create(
+                model=self.model,
+                temperature=self.temperature,
+                messages=messages,
+                response_format={"type": "json_object"},
+            )
+            content = response.choices[0].message.content or "{}"
+            return self._parse_response(content), response.usage
 
     def _serialize_input(self, data: Any) -> str:
         """Serialize input data to JSON string for prompt injection."""

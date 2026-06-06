@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ── Enums ────────────────────────────────────────────────
@@ -92,6 +92,7 @@ class RBACRule(BaseModel):
 
 class AuthConfig(BaseModel):
     """Authentication configuration."""
+    model_config = ConfigDict(extra="forbid")
     method: AuthMethod = Field(default=AuthMethod.JWT)
     token_expiry_minutes: int = Field(default=60)
     refresh_token_enabled: bool = Field(default=True)

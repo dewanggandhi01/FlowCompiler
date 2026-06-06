@@ -83,7 +83,7 @@ class TestUISchema:
     def test_empty_ui(self):
         ui = UISchema()
         assert len(ui.pages) == 0
-        assert ui.theme["mode"] == "dark"
+        assert ui.theme.mode == "dark"
 
 
 class TestAPISchema:

@@ -373,8 +373,19 @@ class CompilationPipeline:
 
     # ── Conditional Edge ─────────────────────────────────
 
+    def _has_schemas(self, state: PipelineState) -> bool:
+        return all([
+            state.get("ui_schema"),
+            state.get("api_schema"),
+            state.get("db_schema"),
+            state.get("auth_schema"),
+        ])
+
     def _should_repair(self, state: PipelineState) -> str:
         """Decide whether to repair or proceed to simulation."""
+        if not self._has_schemas(state):
+            return "simulate"
+
         validation = state.get("validation_result")
         iteration = state.get("repair_iteration", 0)
 

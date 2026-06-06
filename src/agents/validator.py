@@ -128,6 +128,18 @@ class ValidationEngine:
             self.passed_checks += 1
         return passed
 
+    def _path_matches(self, ui_path: str, api_paths: set[str]) -> bool:
+        import re
+        normalized = ui_path.split("?")[0].rstrip("/") or "/"
+        for api_path in api_paths:
+            candidate = api_path.rstrip("/") or "/"
+            if normalized == candidate:
+                return True
+            pattern = re.sub(r"\{[^}]+\}", "[^/]+", candidate)
+            if re.fullmatch(pattern, normalized):
+                return True
+        return False
+
     # ── UI Validation ────────────────────────────────────
 
     def _validate_ui(self, ui: UISchema) -> None:
@@ -425,22 +437,8 @@ class ValidationEngine:
         all_endpoints = api.endpoints + api.auth_endpoints
         api_paths = {ep.path for ep in all_endpoints}
 
-        # Also accept paths with path parameters replaced
-        api_path_patterns = set()
-        for path in api_paths:
-            api_path_patterns.add(path)
-            # Add pattern without specific params for matching
-            import re
-            pattern = re.sub(r'\{[^}]+\}', '{id}', path)
-            api_path_patterns.add(pattern)
-
-        # Check form submit endpoints
         for form in ui.forms:
-            normalized = form.submit_endpoint.split("?")[0]  # Strip query params
-            if not self._check(
-                normalized in api_path_patterns
-                or any(normalized.rstrip("/") == p.rstrip("/") for p in api_path_patterns)
-            ):
+            if not self._check(self._path_matches(form.submit_endpoint, api_paths)):
                 self._add_error(
                     ValidationLayer.CROSS_LAYER,
                     f"ui.forms[{form.id}].submit_endpoint",
@@ -451,13 +449,8 @@ class ValidationEngine:
                     auto_fixable=True,
                 )
 
-        # Check table data endpoints
         for table in ui.tables:
-            normalized = table.data_endpoint.split("?")[0]
-            if not self._check(
-                normalized in api_path_patterns
-                or any(normalized.rstrip("/") == p.rstrip("/") for p in api_path_patterns)
-            ):
+            if not self._check(self._path_matches(table.data_endpoint, api_paths)):
                 self._add_error(
                     ValidationLayer.CROSS_LAYER,
                     f"ui.tables[{table.id}].data_endpoint",

@@ -126,10 +126,14 @@ class DBEnum(BaseModel):
     values: list[str] = Field(default_factory=list)
 
 
+class SeedRecord(BaseModel):
+    data: str = Field(default="{}", description="JSON object string for one seed record")
+
+
 class Seed(BaseModel):
     """Seed data for a table."""
     table: str
-    records: list[dict] = Field(default_factory=list)
+    records: list[SeedRecord] = Field(default_factory=list)
 
 
 # ── Main Output ──────────────────────────────────────────

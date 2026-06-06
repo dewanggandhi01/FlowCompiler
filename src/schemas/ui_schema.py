@@ -9,7 +9,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ── Enums ────────────────────────────────────────────────
@@ -169,6 +169,13 @@ class UIChart(BaseModel):
     width: str = Field(default="full", description="Width: full, half, third")
 
 
+class ThemeConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    primary_color: str = "#4F46E5"
+    mode: str = "dark"
+    font_family: str = "Inter"
+
+
 class UIComponent(BaseModel):
     """A generic UI component within a page."""
     id: str = Field(..., description="Unique component identifier")
@@ -176,7 +183,6 @@ class UIComponent(BaseModel):
     title: str = Field(default="")
     description: str = Field(default="")
     entity: str = Field(default="", description="Entity bound to this component")
-    props: dict = Field(default_factory=dict, description="Additional component properties")
     order: int = Field(default=0, description="Display order within the page")
     width: str = Field(default="full")
     ref_form: Optional[str] = Field(default=None, description="Reference to a form ID")
@@ -213,11 +219,4 @@ class UISchema(BaseModel):
     forms: list[UIForm] = Field(default_factory=list)
     tables: list[UITable] = Field(default_factory=list)
     charts: list[UIChart] = Field(default_factory=list)
-    theme: dict = Field(
-        default_factory=lambda: {
-            "primary_color": "#4F46E5",
-            "mode": "dark",
-            "font_family": "Inter",
-        },
-        description="Theme configuration",
-    )
+    theme: ThemeConfig = Field(default_factory=ThemeConfig)

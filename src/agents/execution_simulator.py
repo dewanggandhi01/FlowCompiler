@@ -121,6 +121,21 @@ class ExecutionSimulator:
             self.passed_checks += 1
         return passed
 
+    def _find_endpoint(self, path: str, method: str, endpoints: list) -> Any:
+        import re
+        normalized = path.split("?")[0].rstrip("/") or "/"
+        method_upper = method.upper()
+        for ep in endpoints:
+            if ep.method.value != method_upper:
+                continue
+            candidate = ep.path.rstrip("/") or "/"
+            if normalized == candidate:
+                return ep
+            pattern = re.sub(r"\{[^}]+\}", "[^/]+", candidate)
+            if re.fullmatch(pattern, normalized):
+                return ep
+        return None
+
     def _count_by_category(self, category: str) -> dict[str, int]:
         cat_issues = [i for i in self.issues if i.category == category]
         return {
@@ -133,30 +148,16 @@ class ExecutionSimulator:
     def _simulate_form_submissions(self, ui: UISchema, api: APISchema) -> None:
         """Can all forms submit successfully?"""
         all_endpoints = api.endpoints + api.auth_endpoints
-        api_endpoints = {}
-        for ep in all_endpoints:
-            key = (ep.path.rstrip("/"), ep.method.value)
-            api_endpoints[key] = ep
 
         for form in ui.forms:
-            path = form.submit_endpoint.rstrip("/")
-            method = form.method.upper()
-
-            # Check endpoint exists
-            matching_ep = api_endpoints.get((path, method))
-            if not matching_ep:
-                # Try without exact match
-                matching_ep = next(
-                    (ep for ep in all_endpoints if ep.path.rstrip("/") == path),
-                    None,
-                )
+            matching_ep = self._find_endpoint(form.submit_endpoint, form.method, all_endpoints)
 
             if not self._check(matching_ep is not None):
                 self._add_issue(
                     "form_submission",
-                    f"Form '{form.id}' submits to {method} {path} but no matching endpoint exists",
+                    f"Form '{form.id}' submits to {form.method.upper()} {form.submit_endpoint} but no matching endpoint exists",
                     component=f"form:{form.id}",
-                    suggestion=f"Create {method} {path} endpoint",
+                    suggestion=f"Create {form.method.upper()} {form.submit_endpoint} endpoint",
                 )
                 continue
 
@@ -298,11 +299,7 @@ class ExecutionSimulator:
         all_endpoints = api.endpoints + api.auth_endpoints
 
         for table in ui.tables:
-            # Table → API endpoint
-            matching_ep = next(
-                (ep for ep in all_endpoints if ep.path.rstrip("/") == table.data_endpoint.rstrip("/")),
-                None,
-            )
+            matching_ep = self._find_endpoint(table.data_endpoint, "GET", all_endpoints)
 
             if matching_ep:
                 # API endpoint → DB table

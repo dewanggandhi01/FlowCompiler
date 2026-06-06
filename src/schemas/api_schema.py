@@ -9,7 +9,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ── Enums ────────────────────────────────────────────────
@@ -52,10 +52,9 @@ class RequestField(BaseModel):
     description: str = Field(default="")
     default: Optional[str] = None
     enum_values: list[str] = Field(default_factory=list)
-    validation: dict = Field(
-        default_factory=dict,
-        description="Validation rules: min_length, max_length, pattern, etc.",
-    )
+    min_length: Optional[int] = None
+    max_length: Optional[int] = None
+    pattern: Optional[str] = None
 
 
 class ResponseField(BaseModel):
@@ -123,9 +122,9 @@ class APIEndpoint(BaseModel):
 
 class MiddlewareConfig(BaseModel):
     """API middleware configuration."""
+    model_config = ConfigDict(extra="forbid")
     name: str
     enabled: bool = Field(default=True)
-    config: dict = Field(default_factory=dict)
 
 
 # ── Main Output ──────────────────────────────────────────
@@ -146,13 +145,7 @@ class APISchema(BaseModel):
     request_models: list[RequestModel] = Field(default_factory=list)
     response_models: list[ResponseModel] = Field(default_factory=list)
 
-    middleware: list[MiddlewareConfig] = Field(
-        default_factory=lambda: [
-            MiddlewareConfig(name="cors", config={"origins": ["*"]}),
-            MiddlewareConfig(name="rate_limiter", config={"default": "100/minute"}),
-            MiddlewareConfig(name="auth", config={"type": "jwt"}),
-        ]
-    )
+    middleware: list[MiddlewareConfig] = Field(default_factory=list)
 
     auth_endpoints: list[APIEndpoint] = Field(
         default_factory=list,

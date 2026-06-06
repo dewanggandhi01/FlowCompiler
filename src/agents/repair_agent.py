@@ -242,38 +242,42 @@ class RepairEngine:
                 success=True,
             )
 
-        # Categorize errors by layer
-        ui_errors = [e for e in errors if e.layer in (ValidationLayer.UI, ValidationLayer.CROSS_LAYER) and "ui." in e.field]
-        api_errors = [e for e in errors if e.layer in (ValidationLayer.API, ValidationLayer.CROSS_LAYER) and "api." in e.field]
-        db_errors = [e for e in errors if e.layer in (ValidationLayer.DB, ValidationLayer.CROSS_LAYER) and "db." in e.field]
-        auth_errors = [e for e in errors if e.layer in (ValidationLayer.AUTH, ValidationLayer.CROSS_LAYER) and "auth." in e.field]
+        ui_errors = [e for e in errors if e.layer == ValidationLayer.UI]
+        api_errors = [e for e in errors if e.layer == ValidationLayer.API]
+        db_errors = [e for e in errors if e.layer == ValidationLayer.DB]
+        auth_errors = [e for e in errors if e.layer == ValidationLayer.AUTH]
 
-        # Also catch cross-layer errors
-        cross_errors = [e for e in errors if e.layer == ValidationLayer.CROSS_LAYER]
-        for e in cross_errors:
-            if "ui." in e.field and e not in ui_errors:
+        for e in errors:
+            if e.layer != ValidationLayer.CROSS_LAYER:
+                continue
+            field = e.field.lower()
+            msg = e.message.lower()
+            if field.startswith("ui.") or field.startswith(("pages", "forms", "tables", "charts")):
                 ui_errors.append(e)
-            elif "api." in e.field and e not in api_errors:
+            elif field.startswith("api.") or field.startswith("endpoints") or "auth_endpoints" in field:
                 api_errors.append(e)
-            elif "db." in e.field and e not in db_errors:
+            elif "db table" in msg or "corresponding db" in msg or field.startswith("tables"):
                 db_errors.append(e)
-            elif "auth." in e.field and e not in auth_errors:
+            elif field.startswith("auth.") or field.startswith("roles") or "rbac" in field:
+                auth_errors.append(e)
+            elif "endpoint" in msg and "form" in field:
+                api_errors.append(e)
+            elif "role" in msg:
                 auth_errors.append(e)
 
-        # Catch uncategorized errors
-        categorized = set(e.id for e in ui_errors + api_errors + db_errors + auth_errors)
+        categorized = {e.id for e in ui_errors + api_errors + db_errors + auth_errors}
         for e in errors:
-            if e.id not in categorized:
-                # Try to infer layer from error message
-                msg_lower = e.message.lower()
-                if "form" in msg_lower or "page" in msg_lower or "table" in msg_lower or "chart" in msg_lower:
-                    ui_errors.append(e)
-                elif "endpoint" in msg_lower or "request" in msg_lower or "response" in msg_lower:
-                    api_errors.append(e)
-                elif "column" in msg_lower or "foreign" in msg_lower or "primary" in msg_lower:
-                    db_errors.append(e)
-                elif "role" in msg_lower or "permission" in msg_lower or "rbac" in msg_lower:
-                    auth_errors.append(e)
+            if e.id in categorized:
+                continue
+            msg_lower = e.message.lower()
+            if any(k in msg_lower for k in ("form", "page", "chart")) or "ui table" in msg_lower:
+                ui_errors.append(e)
+            elif "endpoint" in msg_lower or "request model" in msg_lower or "response model" in msg_lower:
+                api_errors.append(e)
+            elif any(k in msg_lower for k in ("column", "foreign key", "primary key", "db table")):
+                db_errors.append(e)
+            elif any(k in msg_lower for k in ("role", "permission", "rbac")):
+                auth_errors.append(e)
 
         changes_made = []
         errors_fixed = []

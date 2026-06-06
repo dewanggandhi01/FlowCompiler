@@ -43,7 +43,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CompilerOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"ui" | "api" | "db" | "auth">("ui");
+  const [activeTab, setActiveTab] = useState<"intent" | "design" | "ui" | "api" | "db" | "auth">("intent");
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
@@ -178,16 +178,28 @@ export default function Home() {
           {/* Section 3: Generated Schemas */}
           <section className="glass-card full-width animate-slide-in" style={{ padding: 24, animationDelay: "0.2s" }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>📋 Generated Schemas</h2>
-            <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
-              {(["ui", "api", "db", "auth"] as const).map((tab) => (
+            <div style={{ display: "flex", gap: 4, marginBottom: 16, overflowX: "auto", paddingBottom: 4 }}>
+              {(["intent", "design", "ui", "api", "db", "auth"] as const).map((tab) => (
                 <button key={tab} className={`tab-btn ${activeTab === tab ? "active" : ""}`} onClick={() => setActiveTab(tab)}>
-                  {tab.toUpperCase()}
+                  {tab === "intent" ? "Extracted Intent" : tab === "design" ? "System Design" : tab.toUpperCase()}
                 </button>
               ))}
             </div>
             <div className="code-block" style={{ maxHeight: 500, overflow: "auto" }}>
-              {result.runtime_config ? (
-                <pre>{JSON.stringify(result.runtime_config[activeTab], null, 2)}</pre>
+              {activeTab === "intent" ? (
+                result.intent ? (
+                  <pre>{JSON.stringify(result.intent, null, 2)}</pre>
+                ) : (
+                  <span style={{ color: "var(--text-muted)" }}>No intent extracted</span>
+                )
+              ) : activeTab === "design" ? (
+                result.system_design ? (
+                  <pre>{JSON.stringify(result.system_design, null, 2)}</pre>
+                ) : (
+                  <span style={{ color: "var(--text-muted)" }}>No system design generated</span>
+                )
+              ) : result.runtime_config ? (
+                <pre>{JSON.stringify(result.runtime_config[activeTab as "ui" | "api" | "db" | "auth"], null, 2)}</pre>
               ) : (
                 <span style={{ color: "var(--text-muted)" }}>No schemas generated</span>
               )}
