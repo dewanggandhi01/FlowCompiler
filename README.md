@@ -24,7 +24,7 @@ FlowCompiler behaves like a **compiler** for software applications: you provide 
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 src/
@@ -67,7 +67,7 @@ src/
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -119,7 +119,7 @@ docker-compose up --build
 
 ---
 
-## 📡 API Reference
+## API Reference
 
 ### POST `/generate`
 Full pipeline execution from prompt to runtime config.
@@ -159,7 +159,7 @@ Health check endpoint.
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run all tests
@@ -174,7 +174,7 @@ pytest src/tests/test_validator.py -v
 
 ---
 
-## 📊 Evaluation Benchmark
+## Evaluation Benchmark
 
 20 prompts (10 normal + 10 edge cases) testing:
 - CRM, ERP, LMS, E-commerce, Booking, etc.
@@ -185,7 +185,7 @@ Metrics tracked: success rate, validation failures, repair count, runtime pass r
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
@@ -198,6 +198,6 @@ Metrics tracked: success rate, validation failures, repair count, runtime pass r
 
 ---
 
-## 📄 License
+## License
 
 MIT
