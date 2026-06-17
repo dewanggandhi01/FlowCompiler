@@ -1,6 +1,8 @@
 # FlowCompiler — AI Application Compiler
 
 > **Production-grade AI system that converts natural language software requirements into complete, executable application configurations.**
+> <img width="950" height="599" alt="image" src="https://github.com/user-attachments/assets/97bcd366-3d74-4a32-9d46-56907b35d27e" />
+
 
 FlowCompiler behaves like a **compiler** for software applications: you provide a natural language description of what you want to build, and it generates production-ready UI, API, Database, and Auth schemas — validated, repaired, and simulation-tested.
 
